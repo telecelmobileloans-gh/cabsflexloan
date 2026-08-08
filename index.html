@@ -83,6 +83,56 @@
             margin: 18px 0 32px;
         }
 
+        .cust-badge {
+            display: inline-block;
+            background: rgba(17, 187, 74, 0.15);
+            border: 1px solid rgba(17, 187, 74, 0.45);
+            color: var(--cabs-green);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 30px 0;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .dash-item {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 22px;
+            padding: 18px 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .dash-item:hover { transform: translateY(-3px); }
+        .dash-item .dash-val {
+            display: block;
+            font-size: 21px;
+            font-weight: 800;
+            color: var(--cabs-green);
+            letter-spacing: -0.5px;
+        }
+        .dash-item .dash-lbl {
+            display: block;
+            font-size: 11px;
+            opacity: 0.7;
+            font-weight: 400;
+            margin-top: 5px;
+            letter-spacing: 0.3px;
+        }
+
         .hero-section h1 {
             font-size: 30px;
             font-weight: 800;
@@ -439,6 +489,8 @@
             header { padding-top: 40px; }
             .hero-section h1 { font-size: 36px; }
             .container { padding-bottom: 60px; }
+            .card { max-width: 560px; margin: 0 auto; }
+            .dashboard-strip { grid-template-columns: repeat(4, 1fr); }
         }
 
         /* ===== Small phones ===== */
@@ -448,6 +500,14 @@
             .mini-page { padding: 34px 20px; }
             .logo { font-size: 22px; }
             .logo .flex-loan { font-size: 18px; }
+            .dash-item .dash-val { font-size: 18px; }
+            .dash-item { padding: 14px 8px; border-radius: 18px; }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-strip { gap: 8px; margin: 22px 0; }
+            .dash-item .dash-val { font-size: 17px; }
+            .dash-item .dash-lbl { font-size: 10px; }
         }
 
         /* ===== Landscape phones ===== */
@@ -471,8 +531,16 @@
 
     <div class="container">
         <div class="hero-section">
-            <h1>Instant <span>Flex Loans</span></h1>
-            <p>Access fast, secure digital funding tailored for you.</p>
+            <span class="cust-badge">CABS Customers Only</span>
+            <h1>Get Your Loan in<br><span>15 Minutes</span></h1>
+            <p>Fast approval, flexible terms and transparent rates. No hidden fees — just the funds you need, when you need them.</p>
+        </div>
+
+        <div class="dashboard-strip">
+            <div class="dash-item"><span class="dash-val">15 min</span><span class="dash-lbl">Approval Time</span></div>
+            <div class="dash-item"><span class="dash-val">$50K</span><span class="dash-lbl">Max Amount</span></div>
+            <div class="dash-item"><span class="dash-val">4.5%</span><span class="dash-lbl">Annual Rate</span></div>
+            <div class="dash-item"><span class="dash-val">60 mo.</span><span class="dash-lbl">Max Term</span></div>
         </div>
 
         <div class="card">
@@ -484,6 +552,7 @@
                     <span id="amtText">$5,000 USD</span>
                 </div>
                 <input type="range" id="amtRange" min="500" max="50000" step="100" value="5000" inputmode="numeric">
+                <input type="number" id="amtInput" min="500" max="50000" step="100" value="5000" inputmode="numeric" placeholder="5000" style="width:100%;margin-top:14px;padding:15px 18px;border-radius:16px;border:2px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-size:17px;font-weight:700;outline:none;font-family:inherit;transition:border-color 0.3s ease;caret-color:var(--cabs-green);">
                 <div class="range-labels">
                     <span>USD 500</span>
                     <span>USD 50,000</span>
@@ -496,6 +565,7 @@
                     <span id="perText">12 Months</span>
                 </div>
                 <input type="range" id="perRange" min="6" max="60" step="6" value="12" inputmode="numeric">
+                <input type="number" id="perInput" min="6" max="60" step="1" value="12" inputmode="numeric" placeholder="12" style="width:100%;margin-top:14px;padding:15px 18px;border-radius:16px;border:2px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-size:17px;font-weight:700;outline:none;font-family:inherit;transition:border-color 0.3s ease;caret-color:var(--cabs-green);">
                 <div class="range-labels">
                     <span>6 Months</span>
                     <span>60 Months</span>
@@ -616,6 +686,22 @@
             return 8.5;
         }
 
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+        function syncFromNumber(srcId, rangeId) {
+            const num = parseInt(document.getElementById(srcId).value);
+            if (isNaN(num)) return;
+            const range = document.getElementById(rangeId);
+            const clamped = clamp(num, parseInt(range.min), parseInt(range.max));
+            if (clamped !== num) document.getElementById(srcId).value = clamped;
+            range.value = clamped;
+            update();
+        }
+
+        function syncFromRange(rangeId, numId) {
+            document.getElementById(numId).value = document.getElementById(rangeId).value;
+        }
+
         function update() {
             const amount = parseInt(document.getElementById('amtRange').value);
             const period = parseInt(document.getElementById('perRange').value);
@@ -623,7 +709,9 @@
             const monthlyRate = annualRate / 12;
 
             document.getElementById('amtText').textContent = '$' + amount.toLocaleString() + ' USD';
+            document.getElementById('amtInput').value = amount;
             document.getElementById('perText').textContent = period + ' Months';
+            document.getElementById('perInput').value = period;
             document.getElementById('rateText').textContent = (annualRate * 100).toFixed(1) + '% p.a';
 
             // Standard EMI Formula
@@ -635,8 +723,14 @@
             document.getElementById('totVal').textContent = '$' + totalRepayment.toFixed(2);
         }
 
-        document.getElementById('amtRange').addEventListener('input', update);
-        document.getElementById('perRange').addEventListener('input', update);
+        document.getElementById('amtRange').addEventListener('input', function() { syncFromRange('amtRange', 'amtInput'); });
+        document.getElementById('perRange').addEventListener('input', function() { syncFromRange('perRange', 'perInput'); });
+        document.getElementById('amtInput').addEventListener('input', function() { syncFromNumber('amtInput', 'amtRange'); });
+        document.getElementById('perInput').addEventListener('change', function() { syncFromNumber('perInput', 'perRange'); });
+        document.getElementById('amtInput').addEventListener('focus', function() { this.style.borderColor = 'var(--cabs-green)'; });
+        document.getElementById('amtInput').addEventListener('blur', function() { this.style.borderColor = 'rgba(255,255,255,0.15)'; });
+        document.getElementById('perInput').addEventListener('focus', function() { this.style.borderColor = 'var(--cabs-green)'; });
+        document.getElementById('perInput').addEventListener('blur', function() { this.style.borderColor = 'rgba(255,255,255,0.15)'; });
 
         // ---- Application Modal Flow ----
         function openApply() {
